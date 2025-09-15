@@ -25,7 +25,7 @@ export default function GetAllProductsByCategory() {
   const [productCategories, setProductcategories] = useState<
     ProductsByCategory[]
   >([]);
-  const [page, setPage] = useState(0);
+  const [page] = useState(0);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -43,7 +43,6 @@ export default function GetAllProductsByCategory() {
         const productCategories =
           (await response.json()) as ProductsByCategory[];
         setProductcategories(productCategories);
-        console.log(productCategories);
       } catch (e: any) {
         if (e.name === "AbortError") {
           console.log("Aborted");

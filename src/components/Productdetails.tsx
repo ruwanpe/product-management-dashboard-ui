@@ -19,7 +19,7 @@ export default function GetAllProducts() {
   const [error, setError] = useState();
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [page, setPage] = useState(0);
+  const [page] = useState(0);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 

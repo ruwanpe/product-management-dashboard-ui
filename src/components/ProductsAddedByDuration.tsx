@@ -44,7 +44,6 @@ export default function GetAllProductsByDuration() {
         const ProductsByDuration =
           (await response.json()) as ProductsByDuration[];
         setProductcategories(ProductsByDuration);
-        console.log(ProductsByDuration);
       } catch (e: any) {
         if (e.name === "AbortError") {
           console.log("Aborted");
