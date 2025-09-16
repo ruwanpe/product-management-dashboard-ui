@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 import { fetchData } from "../Service/ProductService";
 
 interface Product {
@@ -70,7 +71,7 @@ export default function ProductDetails() {
               <td>{product.price}</td>
               <td>{product.sku}</td>
               <td>{product.stockQuantity}</td>
-              <td>{product.dateAdded}</td>
+              <td>{format(new Date(product.dateAdded), "MM-dd-yyyy")}</td>
             </tr>
           ))}
         </tbody>
