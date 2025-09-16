@@ -10,10 +10,8 @@ import {
   ResponsiveContainer,
   Label,
 } from "recharts";
-import { useEffect, useRef, useState } from "react";
-
-const BASE_URL =
-  "https://localhost:7249/api/Product/GetAllProductsByDurationAdded";
+import { useEffect, useState } from "react";
+import { fetchData } from "../Service/ProductService";
 
 interface ProductsByDuration {
   Duration: string;
@@ -21,47 +19,23 @@ interface ProductsByDuration {
 }
 
 export default function ProductsAddedByDuration() {
-  const [productsByDuration, setProductsByDuration] = useState<
+  const [productsAddedByDuration, setProductsAddedByDuration] = useState<
     ProductsByDuration[]
   >([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  const fetchProductsByDuration = async () => {
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(BASE_URL, {
-        signal: abortControllerRef.current.signal,
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = (await response.json()) as ProductsByDuration[];
-      setProductsByDuration(data);
-    } catch (e: unknown) {
-      if (e instanceof DOMException && e.name === "AbortError") {
-        console.log("Fetch aborted");
-        return;
-      }
-      if (e instanceof Error) {
-        setError(e);
-      } else {
-        setError(new Error("An unknown error occurred"));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchProductsByDuration();
-    return () => {
-      abortControllerRef.current?.abort();
+    const getProductsAddedByDuration = async () => {
+      try {
+        const data = await fetchData("Product/GetAllProductsByDurationAdded");
+        setProductsAddedByDuration(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("Unknown error"));
+      }
     };
+
+    getProductsAddedByDuration().finally(() => setIsLoading(false));
   }, []);
 
   if (isLoading) {
@@ -83,7 +57,7 @@ export default function ProductsAddedByDuration() {
       </h3>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
-          data={productsByDuration}
+          data={productsAddedByDuration}
           margin={{ top: 20, right: 30, left: 10, bottom: 50 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />

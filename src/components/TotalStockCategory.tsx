@@ -10,53 +10,39 @@ import {
   Legend,
   Label,
 } from "recharts";
-import { useEffect, useRef, useState } from "react";
-
-const BASE_URL = "https://localhost:7249/api/Product/GetAllProductsByCategory";
+import { useEffect, useState } from "react";
+import { fetchData } from "../Service/ProductService";
 
 interface ProductsByCategory {
   CategoryName: string;
   TotalQuantity: number;
 }
 
-export default function GetAllProductsByCategory() {
+export default function TotalStockCategory() {
   const [productsByCategory, setProductsByCategory] = useState<
     ProductsByCategory[]
   >([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  const fetchProductsByCategory = async () => {
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(BASE_URL, {
-        signal: abortControllerRef.current.signal,
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = (await response.json()) as ProductsByCategory[];
-      setProductsByCategory(data);
-    } catch (e: any) {
-      if (e?.name === "AbortError") {
-        console.log("Fetch aborted");
-        return;
-      }
-      setError(e?.message || "Something went wrong! Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    fetchProductsByCategory();
-    return () => {
-      abortControllerRef.current?.abort();
+    const getProducts = async () => {
+      setIsLoading(true);
+      try {
+        const data = await fetchData("Product/GetAllProductsByCategory");
+        setProductsByCategory(data);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err);
+        } else {
+          setError(new Error(typeof err === "string" ? err : "Unknown error"));
+        }
+      } finally {
+        setIsLoading(false);
+      }
     };
+
+    getProducts();
   }, []);
 
   if (isLoading) {
@@ -65,8 +51,8 @@ export default function GetAllProductsByCategory() {
 
   if (error) {
     return (
-      <div className="text-center mt-3" style={{ color: "red" }}>
-        Error: {error}
+      <div className="text-danger text-center mt-3">
+        Error: {error.message || "Something went wrong! Please try again."}
       </div>
     );
   }
