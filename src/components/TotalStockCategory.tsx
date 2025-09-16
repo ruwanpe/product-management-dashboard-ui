@@ -20,46 +20,55 @@ interface ProductsByCategory {
 }
 
 export default function GetAllProductsByCategory() {
-  const [error, setError] = useState();
-  const [isLoading, setIsLoading] = useState(false);
-  const [productCategories, setProductcategories] = useState<
+  const [productsByCategory, setProductsByCategory] = useState<
     ProductsByCategory[]
   >([]);
-  const [page] = useState(0);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-
-      setIsLoading(true);
-
-      try {
-        const response = await fetch(BASE_URL, {
-          signal: abortControllerRef.current?.signal,
-        });
-        const productCategories =
-          (await response.json()) as ProductsByCategory[];
-        setProductcategories(productCategories);
-      } catch (e: any) {
-        if (e.name === "AbortError") {
-          console.log("Aborted");
-          return;
-        }
-
-        setError(e);
-      } finally {
-        setIsLoading(false);
+  const fetchProductsByCategory = async () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(BASE_URL, {
+        signal: abortControllerRef.current.signal,
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const data = (await response.json()) as ProductsByCategory[];
+      setProductsByCategory(data);
+    } catch (e: any) {
+      if (e?.name === "AbortError") {
+        console.log("Fetch aborted");
+        return;
+      }
+      setError(e?.message || "Something went wrong! Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchPosts();
-  }, [page]);
+  useEffect(() => {
+    fetchProductsByCategory();
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  if (isLoading) {
+    return <div className="text-center mt-3">Loading...</div>;
+  }
 
   if (error) {
-    return <div>Something went wrong! Please try again.</div>;
+    return (
+      <div className="text-center mt-3" style={{ color: "red" }}>
+        Error: {error}
+      </div>
+    );
   }
 
   return (
@@ -69,7 +78,7 @@ export default function GetAllProductsByCategory() {
       </h3>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
-          data={productCategories}
+          data={productsByCategory}
           margin={{ top: 20, right: 30, left: 10, bottom: 50 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -108,7 +117,6 @@ export default function GetAllProductsByCategory() {
           />
         </BarChart>
       </ResponsiveContainer>
-      {isLoading && <div className="text-center mt-3">Loading...</div>}
     </div>
   );
 }

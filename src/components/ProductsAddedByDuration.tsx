@@ -20,47 +20,60 @@ interface ProductsByDuration {
   ProductsAdded: number;
 }
 
-export default function GetAllProductsByDuration() {
-  const [error, setError] = useState();
-  const [isLoading, setIsLoading] = useState(false);
-  const [ProductsByDuration, setProductcategories] = useState<
+export default function ProductsAddedByDuration() {
+  const [productsByDuration, setProductsByDuration] = useState<
     ProductsByDuration[]
   >([]);
-  const [page, setPage] = useState(0);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-
-      setIsLoading(true);
-
-      try {
-        const response = await fetch(BASE_URL, {
-          signal: abortControllerRef.current?.signal,
-        });
-        const ProductsByDuration =
-          (await response.json()) as ProductsByDuration[];
-        setProductcategories(ProductsByDuration);
-      } catch (e: any) {
-        if (e.name === "AbortError") {
-          console.log("Aborted");
-          return;
-        }
-
-        setError(e);
-      } finally {
-        setIsLoading(false);
+  const fetchProductsByDuration = async () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(BASE_URL, {
+        signal: abortControllerRef.current.signal,
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const data = (await response.json()) as ProductsByDuration[];
+      setProductsByDuration(data);
+    } catch (e: unknown) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        console.log("Fetch aborted");
+        return;
+      }
+      if (e instanceof Error) {
+        setError(e);
+      } else {
+        setError(new Error("An unknown error occurred"));
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchPosts();
-  }, [page]);
+  useEffect(() => {
+    fetchProductsByDuration();
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  if (isLoading) {
+    return <div className="text-center mt-3">Loading...</div>;
+  }
 
   if (error) {
-    return <div>Something went wrong! Please try again.</div>;
+    return (
+      <div className="text-center mt-3" style={{ color: "red" }}>
+        Error: {error.message || "Something went wrong! Please try again."}
+      </div>
+    );
   }
 
   return (
@@ -70,7 +83,7 @@ export default function GetAllProductsByDuration() {
       </h3>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
-          data={ProductsByDuration}
+          data={productsByDuration}
           margin={{ top: 20, right: 30, left: 10, bottom: 50 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -109,7 +122,6 @@ export default function GetAllProductsByDuration() {
           />
         </BarChart>
       </ResponsiveContainer>
-      {isLoading && <div className="text-center mt-3">Loading...</div>}
     </div>
   );
 }
