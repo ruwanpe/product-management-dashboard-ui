@@ -23,7 +23,7 @@ export default function ProductDetails() {
   useEffect(() => {
     const getProducts = async () => {
       try {
-        const data = await fetchData("Product");
+        const data = await fetchData("All");
         setProducts(data);
       } catch (err) {
         setError(err as Error);

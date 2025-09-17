@@ -29,7 +29,7 @@ export default function TotalStockCategory() {
     const getProducts = async () => {
       setIsLoading(true);
       try {
-        const data = await fetchData("Product/GetAllProductsByCategory");
+        const data = await fetchData("AllByCategory");
         setProductsByCategory(data);
       } catch (err) {
         if (err instanceof Error) {

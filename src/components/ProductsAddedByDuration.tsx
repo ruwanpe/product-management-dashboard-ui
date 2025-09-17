@@ -28,7 +28,7 @@ export default function ProductsAddedByDuration() {
   useEffect(() => {
     const getProductsAddedByDuration = async () => {
       try {
-        const data = await fetchData("Product/GetAllProductsByDurationAdded");
+        const data = await fetchData("AllByDurationAdded");
         setProductsAddedByDuration(data);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Unknown error"));
